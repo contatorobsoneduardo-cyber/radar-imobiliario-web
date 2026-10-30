@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Imobiliário - Chapecó</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e1e1e; border: 1px solid #333; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-emerald-500">Radar Imobiliário</h1>
+            <span class="text-sm bg-gray-800 px-3 py-1 rounded border border-gray-700">Modo: GitHub Pages</span>
+        </div>
+        
+        <div class="card p-5 rounded-lg mb-6 flex gap-4 items-end flex-wrap">
+            <div>
+                <label class="block text-sm mb-1 text-gray-400">Cidade</label>
+                <input type="text" id="filtroCidade" value="Chapecó" class="bg-gray-800 border border-gray-600 rounded p-2 text-white w-48 focus:border-emerald-500 focus:outline-none">
+            </div>
+            <button onclick="carregarDados()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded transition-colors">
+                Atualizar Radar (Ler base_radar.json)
+            </button>
+        </div>
+
+        <div id="listaImoveis" class="space-y-4">
+            <div class="text-center py-10 text-gray-500">
+                Clique no botão acima para carregar os imóveis capturados pelo robô.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function carregarDados() {
+            const lista = document.getElementById('listaImoveis');
+            lista.innerHTML = '<p class="text-gray-400 text-center py-10">A ler ficheiro base_radar.json...</p>';
+            
+            try {
+                const resposta = await fetch('base_radar.json');
+                
+                if (!resposta.ok) {
+                    throw new Error('Ficheiro não encontrado');
+                }
+                
+                const imoveis = await resposta.json();
+                lista.innerHTML = '';
+                
+                if (imoveis.length === 0) {
+                    lista.innerHTML = '<p class="text-yellow-500 text-center py-10">O ficheiro JSON está vazio. Aguarde o robô efetuar a extração.</p>';
+                    return;
+                }
+                
+                imoveis.forEach(imovel => {
+                    const card = document.createElement('div');
+                    card.className = 'card p-5 rounded-lg flex justify-between items-center hover:border-emerald-500 transition-colors';
+                    
+                    card.innerHTML = `
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="bg-emerald-900 text-emerald-300 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">${imovel.status || 'Ativo'}</span>
+                                <span class="text-gray-400 text-sm font-semibold">${imovel.imobiliaria}</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white mb-1">${imovel.titulo}</h2>
+                            <p class="text-gray-400 text-sm">📍 ${imovel.bairro} | 💰 ${imovel.preco}</p>
+                        </div>
+                        <div class="ml-4">
+                            <a href="${imovel.link}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white py-2 px-5 rounded text-sm font-bold inline-block shadow-lg transition-colors">
+                                Ver Anúncio Original
+                            </a>
+                        </div>
+                    `;
+                    lista.appendChild(card);
+                });
+                
+            } catch (erro) {
+                lista.innerHTML = `
+                    <div class="bg-red-900/30 text-red-200 p-6 rounded-lg border border-red-800">
+                        <h3 class="font-bold text-lg mb-2 text-red-400">⚠️ Ficheiro Não Encontrado</h3>
+                        <p class="mb-3">Não foi possível carregar os dados. Se acabou de hospedar no GitHub, certifique-se de que a secção Actions terminou de correr o workflow, criando assim o ficheiro <strong>base_radar.json</strong>.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
